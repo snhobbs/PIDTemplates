@@ -9,8 +9,8 @@
 #include <cstdint>
 
 class DelayIntegratorPlantModel {
-  const double slope_;
   const double delay_;
+  const double slope_;
   const double update_rate_;
   double temperature_;
   double ambient_;

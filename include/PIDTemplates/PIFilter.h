@@ -78,8 +78,14 @@ class IIR_PI_Filter{
   type_t get_set(void) const {
     return set_;
   }
+  void set_set(type_t set) {
+    set_ = set;
+  }
   type_t get_control(void) const {
       return control_;
+  }
+  void set_control(type_t control) {
+    control_ = control;
   }
 };
 

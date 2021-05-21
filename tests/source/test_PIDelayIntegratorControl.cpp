@@ -22,8 +22,8 @@ static const double heat_leak = 0.1;  // 1/c diff^2 temp lost to ambient factor
 
 TEST(PIDelayIntegratorControl, MaintainsTemp) {
   const std::pair<double, double> tuning_values = DelayIntegratorSmicTuning(delay,
-											   slope, // aka gain
-											   update_rate);
+                         slope, // aka gain
+                         update_rate);
 
   const constexpr double set = 10;
   IIR_PI_Filter<double> filter{tuning_values.first, tuning_values.second, 1/update_rate, set};
@@ -38,8 +38,8 @@ TEST(PIDelayIntegratorControl, MaintainsTemp) {
 
 TEST(PIDelayIntegratorControl, MaintainsPositiveTemp) {
   const std::pair<double, double> tuning_values = DelayIntegratorSmicTuning(delay,
-											   slope, // aka gain
-											   update_rate);
+                         slope, // aka gain
+                         update_rate);
 
   const constexpr double set = 100;
   IIR_PI_Filter<double> filter{tuning_values.first, tuning_values.second, 1/update_rate, set};

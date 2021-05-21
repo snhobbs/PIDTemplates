@@ -1,0 +1,9 @@
+[submodule "tests/extern/googletest"]
+	path = tests/extern/googletest
+	url = git@github.com:google/googletest.git
+[submodule "libs/CppUtilities"]
+	path = libs/CppUtilities
+	url = git@github.com:snhobbs/CppUtilities.git
+[submodule "libs/cnl"]
+	path = libs/cnl
+	url = git@github.com:johnmcfarlane/cnl.git

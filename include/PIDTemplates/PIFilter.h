@@ -7,8 +7,6 @@
  */
 
 #pragma once
-#ifndef PIDFILTERS_PIDFILTER_H_
-#define PIDFILTERS_PIDFILTER_H_
 
 #include <cassert>
 #include <cstdint>
@@ -89,4 +87,3 @@ class IIR_PI_Filter{
   }
 };
 
-#endif  //  PIDFILTERS_PIDFILTER_H_

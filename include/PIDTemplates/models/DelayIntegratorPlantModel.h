@@ -11,25 +11,27 @@
 #include "linear_fit.h"
 
 
-template<typename type_t, size_t percent>
+template<typename type_t, size_t percent, size_t percent_stop>
 std::tuple<size_t, size_t> find_center_limits(type_t* data, size_t data_length, size_t start_average=8, size_t end_average=8) {
-  static_assert(percent < 50);
-  type_t start_value = data[0];
-  type_t end_value = data[data_length-1];
-  if (start_average > 1) {
-    start_value = std::accumulate(&data[0], &data[start_average], 0)/start_average;
-  }
-  if (end_average > 1) {
-    end_value = std::accumulate(&data[data_length-end_average], &data[data_length], 0)/end_average;
-  }
+  const constexpr size_t percent_max = 100;
+  static_assert(percent <= percent_max, "");
+  static_assert(percent_stop <= percent_max, "");
+  static_assert(percent_stop > percent, "");
+
+  const type_t divisor_start = type_t{0} >= start_average? 1 : start_average;
+  const type_t divisor_end = type_t{0} >= end_average? 1 : end_average;
+
+  const type_t start_value = std::accumulate(&data[0], &data[start_average], 0)/divisor_start;
+  const type_t end_value = std::accumulate(&data[data_length-end_average], &data[data_length], 0)/divisor_end;
+
   size_t start_position = 0;
   size_t end_position = data_length;
 
   const type_t difference = std::abs(end_value - start_value);
-  type_t plow_value = std::min(start_value, end_value) + difference*(type_t{percent})/100;
-  type_t phigh_value = std::min(start_value, end_value) + difference*(type_t{100}-type_t{percent})/100;
+  const type_t plow_value = std::min(start_value, end_value) + (difference*(percent))/100;
+  const type_t phigh_value = std::min(start_value, end_value) + (difference*(percent_stop))/100;
 
-  assert(phigh_value < std::max(start_value, end_value));
+  assert(phigh_value <= std::max(start_value, end_value));
   assert(phigh_value > plow_value);
   assert(plow_value > std::min(start_value, end_value));
 
@@ -54,6 +56,10 @@ std::tuple<size_t, size_t> find_center_limits(type_t* data, size_t data_length, 
   return {static_cast<size_t>(std::round(start_position)), static_cast<size_t>(std::round(end_position))};
 }
 
+/*
+ * Fits the line from 5% to the end of the input data. This data needs to be truncated such
+ * that the end of the intergration line is still in the linear region.
+ * */
 template<typename type_t>
 std::tuple<type_t, type_t, type_t> fit_delay_integrator(type_t* data, size_t data_length, size_t start_average=8, size_t end_average=8) {
   // Use least squares fit to the 25% to 75% slope. Extend this line down in time, delay is the number
@@ -63,7 +69,7 @@ std::tuple<type_t, type_t, type_t> fit_delay_integrator(type_t* data, size_t dat
     return {0,0,0};
   }
 
-  const auto limits = find_center_limits<double, 45>(data, data_length, start_average, end_average);
+  const auto limits = find_center_limits<double, 5, 100>(data, data_length, start_average, end_average);
   type_t intercept = 0;
   type_t slope = 0;
   type_t residual = 0;
@@ -89,6 +95,15 @@ std::tuple<type_t, type_t, type_t> fit_delay_integrator(type_t* data, size_t dat
   delete[] x_data;
   //  we have the line with intercept, now extend get the x intercept to give the delay
   return {intercept, slope, residual};
+}
+
+//  Factor in the update rate and return the scaled values
+template<typename type_t>
+std::pair<type_t, type_t> translate_parameters(const std::tuple<type_t, type_t, type_t>& fit, size_t update_rate) {
+  const type_t measured_slope = std::get<1>(fit)*update_rate;  //  reading/box -> box/s
+  const type_t x_intercept = std::get<0>(fit);  //  temp at x = 0
+  //  const type_t y_intercept = -x_intercept/measured_slope;  //  time at t = 0
+  return {x_intercept, measured_slope};
 }
 
 class DelayIntegratorPlantModel {

@@ -5,7 +5,6 @@ set(TargetName ${CMAKE_PROJECT_NAME})
 
 set(ProjectDirectory "${CMAKE_CURRENT_SOURCE_DIR}/..")
 set(LibraryDirectory ${ProjectDirectory}/libs)
-set(LibraryPath ${LibraryDirectory})
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON )
 add_executable(${TargetName})
 
@@ -14,8 +13,8 @@ set(TESTSRC ${CMAKE_CURRENT_SOURCE_DIR}/source)
 get_filename_component(TESTSRC source ABSOLUTE)
 aux_source_directory(${TESTSRC} DIR_SRCS)
 target_sources(${TargetName} PUBLIC ${DIR_SRCS})
-target_include_directories(tests PUBLIC ${ProjectDirectory}/include)
-target_include_directories(tests PUBLIC ${TESTSRC} )
+target_include_directories(${TargetName} PUBLIC ${ProjectDirectory}/include)
+target_include_directories(${TargetName} PUBLIC ${TESTSRC} )
 
 # Target Options
 set(CMAKE_CXX_STANDARD 20)
@@ -39,15 +38,18 @@ endif()
 
 # System Includes to keep eclipse happy
 include_directories("/usr/src")
-include_directories("/usr/include")
+#include_directories("/usr/include")
 include_directories(SYSTEM /usr/lib)
 include_directories(SYSTEM /home/simon/local/include)
 include_directories(SYSTEM /usr/include)
 
 # Matplotlib & python
-#find_package(matplotlib_cpp REQUIRED PATHS ${LibraryPath}/matplotlib-cpp)
-target_include_directories(${TargetName} PUBLIC ${LibraryPath}/matplotlib-cpp)
+#find_package(matplotlib_cpp REQUIRED PATHS ${LibraryDirectory}/matplotlib-cpp)
+target_include_directories(${TargetName} PUBLIC ${LibraryDirectory}/matplotlib-cpp)
+include_directories(SYSTEM ${LibraryDirectory}/matplotlib-cpp)
+include_directories(${LibraryDirectory}/matplotlib-cpp)
 target_include_directories(${TargetName} PUBLIC /usr/include/python3.8)
+include_directories(/usr/include/python3.8)
 target_link_libraries(${TargetName} python3.8)
 
 # GTEST
@@ -69,8 +71,11 @@ target_include_directories(${TargetName} PUBLIC ${cnl_DIR}/include)
 include_directories(${cnl_DIR}/include)
 
 ## PIDTemplates
-include_directories(${ProjectDirectory}/include/PIDTemplates)
-include_directories(${ProjectDirectory}/include/PIDTemplates/models)
+set(PIDTemplates_DIR ${LibraryDirectory}/PIDTemplates)
+include_directories(${PIDTemplates_DIR})
+#target_include_directories(${TargetName} PUBLIC ${PIDTemplates_DIR})
+include_directories(${PIDTemplates_DIR}/models)
+#target_include_directories(${TargetName} PUBLIC ${PIDTemplates_DIR}/models)
 target_compile_options(
   ${TargetName}
   PRIVATE

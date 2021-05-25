@@ -1,23 +1,35 @@
 cmake_minimum_required(VERSION 3.10.0)
+SET(CMAKE_VERBOSE_MAKEFILE ON)
 project(tests)
+set(TargetName ${CMAKE_PROJECT_NAME})
 
+set(ProjectDirectory "${CMAKE_CURRENT_SOURCE_DIR}/..")
+set(LibraryDirectory ${ProjectDirectory}/libs)
+set(LibraryPath ${LibraryDirectory})
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON )
+add_executable(${TargetName})
 
+# Add test sources
+set(TESTSRC ${CMAKE_CURRENT_SOURCE_DIR}/source)
+get_filename_component(TESTSRC source ABSOLUTE)
+aux_source_directory(${TESTSRC} DIR_SRCS)
+target_sources(${TargetName} PUBLIC ${DIR_SRCS})
+target_include_directories(tests PUBLIC ${ProjectDirectory}/include)
+target_include_directories(tests PUBLIC ${TESTSRC} )
 
-add_executable(tests)
-
-set(TargetName tests)
-
+# Target Options
 set(CMAKE_CXX_STANDARD 20)
 target_compile_features(${TargetName} PUBLIC cxx_std_20)
 set_property(TARGET ${TargetName} PROPERTY CXX_STANDARD 20)
 #SET(CMAKE_CXX_COMPILER clang++-8)
 #SET(CMAKE_CXX_COMPILER /usr/bin/g++-8)
-get_filename_component(TESTSRC source ABSOLUTE)
+target_compile_definitions(${TargetName} PRIVATE TESTING)
+target_compile_definitions(${TargetName} PRIVATE UNITTESTING)
+target_compile_definitions(${TargetName} PRIVATE LINUX)
+target_compile_definitions(${TargetName} PRIVATE DEBUG)
 
 #fixme this should have all the sources
-aux_source_directory(${TESTSRC} DIR_SRCS)
 
-target_sources(tests PUBLIC ${DIR_SRCS})
 if(FALSE)
   target_link_libraries(${TargetName} asan)
 target_link_libraries(${TargetName} tsan)
@@ -25,29 +37,40 @@ target_link_libraries(${TargetName} ubsan)
 target_link_libraries(${TargetName} msan)
 endif()
 
+# System Includes to keep eclipse happy
 include_directories("/usr/src")
 include_directories("/usr/include")
+include_directories(SYSTEM /usr/lib)
+include_directories(SYSTEM /home/simon/local/include)
+include_directories(SYSTEM /usr/include)
+
+# Matplotlib & python
+#find_package(matplotlib_cpp REQUIRED PATHS ${LibraryPath}/matplotlib-cpp)
+target_include_directories(${TargetName} PUBLIC ${LibraryPath}/matplotlib-cpp)
+target_include_directories(${TargetName} PUBLIC /usr/include/python3.8)
+target_link_libraries(${TargetName} python3.8)
+
+# GTEST
 #find_library(googletest REQUIRED PATHS "/usr/src")
 #find_package(gtest REQUIRED PATHS "${CMAKE_CURRENT_SOURCE_DIR}/extern/googletest/googletest/generated")
 set(gtest_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/googletest/googletest")
-include_directories(${gtest_DIR})
-include_directories(${gtest_DIR}/include)
-include_directories(${gtest_DIR}/include)
-
-set(cnl_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../libs/cnl)
-target_include_directories(${TargetName} PUBLIC ${cnl_DIR}/include)
-include_directories(${cnl_DIR}/include)
-
+include_directories(SYSTEM ${gtest_DIR})
+include_directories(SYSTEM ${gtest_DIR}/include)
+include_directories(SYSTEM ${gtest_DIR}/include)
 target_include_directories(${TargetName} PUBLIC "${gtest_DIR}/include")
-target_include_directories(tests PUBLIC ${TESTSRC} )
-target_include_directories(tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../include/PIDTemplates)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../include/PIDTemplates/models)
 target_link_directories(${TargetName} PUBLIC ${gtest_DIR}/../lib)
 target_link_libraries(${TargetName} gtest)
 target_link_libraries(${TargetName} pthread)
+
+# Dependencies
+## cnl
+set(cnl_DIR ${ProjectDirectory}/libs/cnl)
+target_include_directories(${TargetName} PUBLIC ${cnl_DIR}/include)
+include_directories(${cnl_DIR}/include)
+
+## PIDTemplates
+include_directories(${ProjectDirectory}/include/PIDTemplates)
+include_directories(${ProjectDirectory}/include/PIDTemplates/models)
 target_compile_options(
   ${TargetName}
   PRIVATE

@@ -16,7 +16,7 @@ TEST(DelayIntegratorModel, FallsToAmbient) {
   DelayIntegratorPlantModel plant{delay, slope,
       update_rate, ambient, heat_leak};
   plant.set_temperature(ambient + 100);
-  for(size_t i=0; i<5000; i++) {
+  for(size_t i=0; i<50000; i++) {
     plant.update(0);
   }
   EXPECT_NEAR(plant.get_temperature(), ambient, 0.5);
@@ -26,7 +26,7 @@ TEST(DelayIntegratorModel, RisesToAmbient) {
   DelayIntegratorPlantModel plant{delay, slope,
       update_rate, ambient, heat_leak};
   plant.set_temperature(ambient - 100);
-  for(size_t i=0; i<5000; i++) {
+  for(size_t i=0; i<50000; i++) {
     plant.update(0);
   }
   EXPECT_NEAR(plant.get_temperature(), ambient, 0.5);

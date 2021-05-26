@@ -28,8 +28,8 @@ TEST(gsl_fit_linear, line) {
   double cov_01 = 0;
   double cov_11 = 0;
   double residual = 0;
-  gsl_fit_linear (x.data(), 1,
-	                y.data(), 1,
+  fit_linear<double, double> (x.data(),
+	                y.data(),
 	                x.size(),
 	                &calc_intercept, &calc_slope,
 	                &cov_00, &cov_01, &cov_11, &residual);

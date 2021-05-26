@@ -59,8 +59,8 @@ TEST_F(BumpTestFixture, CheckFit) {
   auto fit = fit_delay_integrator<double>(bump_test_data.data(), bump_test_data.size(), 1, 1);
 
   //  Slope and offset
-  EXPECT_NEAR(static_cast<double>(std::get<0>(fit))/std::get<1>(fit), static_cast<double>(delay*update_rate), double{1e-8});
-  EXPECT_NEAR(static_cast<double>(std::get<2>(fit)), 0, 1e-8);  // Expect a good fit
+  EXPECT_NEAR(static_cast<double>(std::get<0>(fit))/std::get<1>(fit), static_cast<double>(delay*update_rate), double{1});
+  EXPECT_NEAR(static_cast<double>(std::get<2>(fit)), 0, double{1});  // Expect a good fit
 }
 
 TEST(BumpTest, Translation) {

@@ -8,8 +8,16 @@
 #include <numeric>
 #include <cassert>
 #include <cmath>
+#include <cnl/all.h>
 #include "linear_fit.h"
 
+template<typename type_t>
+type_t accumulate(type_t* start, type_t* end, type_t value) {
+  for (type_t* p=start; p!=end; p++) {
+    value += *p;
+  }
+  return value;
+}
 
 template<typename type_t, size_t percent, size_t percent_stop>
 std::tuple<size_t, size_t> find_center_limits(type_t* data, size_t data_length, size_t start_average=8, size_t end_average=8) {
@@ -21,13 +29,13 @@ std::tuple<size_t, size_t> find_center_limits(type_t* data, size_t data_length, 
   const type_t divisor_start = type_t{0} >= start_average? 1 : start_average;
   const type_t divisor_end = type_t{0} >= end_average? 1 : end_average;
 
-  const type_t start_value = std::accumulate(&data[0], &data[start_average], 0)/divisor_start;
-  const type_t end_value = std::accumulate(&data[data_length-end_average], &data[data_length], 0)/divisor_end;
+  const type_t start_value = accumulate<type_t>(&data[0], &data[start_average], type_t{0})/divisor_start;
+  const type_t end_value = accumulate<type_t>(&data[data_length-end_average], &data[data_length], 0)/divisor_end;
 
   size_t start_position = 0;
   size_t end_position = data_length;
 
-  const type_t difference = std::abs(end_value - start_value);
+  const type_t difference = end_value < start_value ? start_value - end_value : end_value - start_value;
   const type_t plow_value = std::min(start_value, end_value) + (difference*(percent))/100;
   const type_t phigh_value = std::min(start_value, end_value) + (difference*(percent_stop))/100;
 
@@ -69,7 +77,7 @@ std::tuple<type_t, type_t, type_t> fit_delay_integrator(type_t* data, size_t dat
     return {0,0,0};
   }
 
-  const auto limits = find_center_limits<double, 5, 100>(data, data_length, start_average, end_average);
+  const auto limits = find_center_limits<type_t, 5, 100>(data, data_length, start_average, end_average);
   type_t intercept = 0;
   type_t slope = 0;
   type_t residual = 0;
@@ -85,8 +93,8 @@ std::tuple<type_t, type_t, type_t> fit_delay_integrator(type_t* data, size_t dat
     x_data[i] = static_cast<double>(std::get<0>(limits)+i);
   }
 
-  gsl_fit_linear (x_data, 1,
-                y_data, 1,
+  fit_linear<type_t, float> (x_data,
+                y_data,
                 span,
                 &intercept, &slope,
                 &cov_00, &cov_01, &cov_11, &residual);

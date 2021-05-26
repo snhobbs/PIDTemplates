@@ -14,15 +14,16 @@
 #include <numeric>
 #include <array>
 
-static constexpr std::pair<double, double> DelayIntegratorSmicTuning(double delay_seconds,
-										   double slope, // aka gain
-										   double update_frequency) {
-  const double alpha = 16;
-  const double beta = 0.4;
-  const double kp = beta / (2 * slope * delay_seconds);
-  const double ti = alpha * delay_seconds;
-  const double ki = (kp / ti) / update_frequency;
-  return std::pair<double, double>{kp, ki};
+template<typename type_t>
+static constexpr std::pair<type_t, type_t> DelayIntegratorSmicTuning(type_t delay_seconds,
+		type_t slope, // aka gain
+		type_t update_frequency) {
+  const type_t alpha = 16;
+  const type_t beta = 0.4;
+  const type_t kp = beta / (2 * slope * delay_seconds);
+  const type_t ti = alpha * delay_seconds;
+  const type_t ki = (kp / ti) / update_frequency;
+  return {kp, ki};
 }
 
 /*

@@ -39,8 +39,8 @@ inline constexpr type_t trapasoid_integral(const type_t p1, const type_t p2, con
 template<typename type_t>
 class IIR_PI_Filter{
  private:
-  const type_t kp_ = 1;
-  const type_t ki_ = 1;
+  type_t kp_ = 1;
+  type_t ki_ = 1;
   const type_t sample_time_ = 1;
   type_t set_ = 0;
 
@@ -71,8 +71,14 @@ class IIR_PI_Filter{
   type_t get_ki(void) const {
     return ki_;
   }
+  void set_ki(type_t ki) {
+    ki_ = ki;
+  }
   type_t get_kp(void) const {
     return kp_;
+  }
+  void set_kp(type_t kp) {
+    kp_ = kp;
   }
   type_t get_set(void) const {
     return set_;

@@ -93,7 +93,7 @@ std::tuple<type_t, type_t, type_t> fit_delay_integrator(type_t* data, size_t dat
     x_data[i] = static_cast<double>(std::get<0>(limits)+i);
   }
 
-  fit_linear<type_t, float> (x_data,
+  fit_linear<type_t, double> (x_data,
                 y_data,
                 span,
                 &intercept, &slope,
@@ -143,7 +143,7 @@ class DelayIntegratorPlantModel {
     const double time = time_step_ * time_step_count_;  //  seconds
     if (time >= delay_) {
       const double temperature_forcing = LinearCalculateHeatLeak(get_temperature(), ambient_, heat_leak_);
-      temperature_ += (slope_ * (control_ + temperature_forcing) * time_step_);
+      temperature_ += (control_ + temperature_forcing) * time_step_ * slope_;
       //  temp/s/control, use last control setting as there is a delay
       control_ = control;
     }

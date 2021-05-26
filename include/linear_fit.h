@@ -58,12 +58,12 @@ inline int fit_linear (const type_t *x,
       }
 
     const size_t degrees_of_freedom = n-2;
-    const float_type s2 = d2 / (float_type{degrees_of_freedom});        /* chisq per degree of freedom */
+    const float_type s2 = d2 / (static_cast<float_type>(degrees_of_freedom));        /* chisq per degree of freedom */
 
-    *cov_00 = s2 * (float_type{1.0} / n) * (float_type{1.0} + m_x * m_x / m_dx2);
-    *cov_11 = s2 * float_type{1.0} / (n * m_dx2);
+    *cov_00 = s2 * (float_type{1.0} / static_cast<float_type>(n)) * (float_type{1.0} + m_x * m_x / m_dx2);
+    *cov_11 = s2 * float_type{1.0} / (static_cast<float_type>(n) * m_dx2);
 
-    *cov_01 = s2 * (-m_x) / (n * m_dx2);
+    *cov_01 = s2 * (-m_x) / (static_cast<float_type>(n) * m_dx2);
 
     *sumsq = d2;
   }

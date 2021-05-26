@@ -17,7 +17,7 @@
 #include "cnl/all.h"
 
 
-#if 1
+#if 0
 #include "matplotlibcpp.h"
 namespace plt = matplotlibcpp;
 #endif
@@ -49,7 +49,7 @@ void check_fit() {
   for (size_t i=0; i<fit_line.size(); i++) {
     fit_line[i] = x[i]*type_t{slope} + type_t{intercept};
   }
-#if 1
+#if 0
   plt::clf();
   plt::plot(std::vector<double>{x.begin(),x.end()}, std::vector<double>{y.begin(),y.end()});
   plt::plot(std::vector<double>{x.begin(),x.end()}, std::vector<double>{fit_line.begin(),fit_line.end()});

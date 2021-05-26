@@ -111,6 +111,7 @@ TEST_F(BumpTestFixture, translate_parameters) {
   auto fit = fit_delay_integrator<double>(bump_test_data.data(), bump_test_data.size(), 1, 1);
   const auto measured_params = translate_parameters<double>(fit, update_rate);
   EXPECT_GT(static_cast<double>(measured_params.first), double{0});  //  positive response coefficient
+  EXPECT_NEAR(static_cast<double>(measured_params.first), delay, static_cast<double>(delay/100));
   EXPECT_NEAR(static_cast<double>(measured_params.second), gain*drive_current, static_cast<double>(measured_params.second/100));
 }
 

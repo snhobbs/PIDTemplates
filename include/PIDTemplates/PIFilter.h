@@ -16,11 +16,11 @@
 
 template<typename type_t>
 static constexpr std::pair<type_t, type_t> DelayIntegratorSmicTuning(type_t delay_seconds,
-		type_t slope, // aka gain
+		type_t gain,
 		type_t update_frequency) {
   const type_t alpha = 16;
   const type_t beta = 0.4;
-  const type_t kp = beta / (2 * slope * delay_seconds);
+  const type_t kp = beta / (2 * gain * delay_seconds);
   const type_t ti = alpha * delay_seconds;
   const type_t ki = (kp / ti) / update_frequency;
   return {kp, ki};

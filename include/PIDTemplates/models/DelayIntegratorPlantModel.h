@@ -69,15 +69,31 @@ std::tuple<size_t, size_t> find_center_limits(type_t* data, size_t data_length, 
  * that the end of the intergration line is still in the linear region.
  * */
 template<typename type_t>
-std::tuple<type_t, type_t, type_t> fit_delay_integrator(type_t* data, size_t data_length, size_t start_average=8, size_t end_average=8) {
+std::tuple<type_t, type_t, type_t> fit_delay_integrator(type_t* data, size_t data_length, const type_t temp_rise=2, size_t start_average=8) {
   // Use least squares fit to the 25% to 75% slope. Extend this line down in time, delay is the number
   // of samples from the start to where this delay starts, the slope is the 25 to 75% section
-  if (data_length < (start_average + end_average)) {
+  if (data_length <= (start_average)) {
     assert(0);
     return {0,0,0};
   }
 
-  const auto limits = find_center_limits<type_t, 5, 100>(data, data_length, start_average, end_average);
+  const type_t divisor_start = type_t{0} >= start_average? 1 : start_average;
+  const type_t averaged_start_temp = accumulate<type_t>(&data[0], &data[start_average], type_t{0})/divisor_start;
+  const type_t temp_start = averaged_start_temp + temp_rise;
+  size_t start_position = 0;
+
+  assert(temp_rise > 0 || data[0] < data[data_length-1]);
+  assert(temp_rise < 0 || data[0] > data[data_length-1]);
+
+  for(; start_position<data_length; start_position++) {
+	  if (data[0] < data[data_length-1]) {  //  increasing
+		if (data[start_position] >= temp_start) break;
+	  } else {
+        if (data[start_position] <= temp_start) break;
+	  }
+  }
+  const std::pair<size_t, size_t> limits{start_position, data_length-1};
+  //  const auto limits = find_levels<type_t, 5, 100>(data, data_length, start_average, end_average);
   type_t intercept = 0;
   type_t slope = 0;
   type_t residual = 0;

@@ -63,7 +63,7 @@ TEST_F(BumpTestFixedPointFixture, CheckFit) {
   for (size_t i=0; i<bump_test_data.size(); i++) {
     bump_test_data[i] = plant.update(drive_current_);
   }
-  auto fit = fit_delay_integrator<type_t>(bump_test_data.data(), bump_test_data.size(), size_t{1}, size_t{1});
+  auto fit = fit_delay_integrator<type_t>(bump_test_data.data(), bump_test_data.size(), 2, size_t{1});
 
   //  Slope and offset
   assert(std::get<1>(fit) != 0);
@@ -95,7 +95,7 @@ TEST_F(BumpTestFixedPointFixture, translate_parameters) {
 	bump_test_data[i] = reading_t;
   }
   std::vector<type_t> vect(bump_test_data.begin(), bump_test_data.end());
-  auto fit = fit_delay_integrator<type_t>(bump_test_data.data(), bump_test_data.size(), 1, 1);
+  auto fit = fit_delay_integrator<type_t>(bump_test_data.data(), bump_test_data.size(), 2, 1);
   const auto measured_params = translate_parameters<type_t>(fit, update_rate_);
   EXPECT_GT(static_cast<type_t>(measured_params.second), type_t{0});  //  positive response coefficient
   const auto slope = static_cast<double>(measured_params.second);

@@ -56,7 +56,7 @@ TEST_F(BumpTestFixture, CheckFit) {
   for (size_t i=0; i<bump_test_data.size(); i++) {
     bump_test_data[i] = plant.update(drive_current);
   }
-  auto fit = fit_delay_integrator<double>(bump_test_data.data(), bump_test_data.size(), 1, 1);
+  auto fit = fit_delay_integrator<double>(bump_test_data.data(), bump_test_data.size(), 2, 4);
 
   //  Slope and offset
   EXPECT_NEAR(static_cast<double>(std::get<0>(fit))/std::get<1>(fit), static_cast<double>(delay*update_rate), double{1});
@@ -83,7 +83,7 @@ TEST_F(BumpTestFixture, PlotResponse) {
 	bump_test_data[i] = plant.update(drive_current);
   }
   std::vector<double> vect(bump_test_data.begin(), bump_test_data.end());
-  auto fit = fit_delay_integrator<double>(bump_test_data.data(), bump_test_data.size(), 1, 1);
+  auto fit = fit_delay_integrator<double>(bump_test_data.data(), bump_test_data.size(), 2, 1);
   const double measured_slope = std::get<1>(fit)*update_rate;  //  reading/box -> box/s
   const double g = measured_slope/drive_current; // temp/amp/second from temp/unit/box -> a / drive_current (*units/amps) * update_rate (boxes/s)
   const double x_intercept = std::get<0>(fit);  //  temp at x = 0
@@ -108,7 +108,7 @@ TEST_F(BumpTestFixture, translate_parameters) {
     bump_test_data[i] = plant.update(drive_current);
   }
   std::vector<double> vect(bump_test_data.begin(), bump_test_data.end());
-  auto fit = fit_delay_integrator<double>(bump_test_data.data(), bump_test_data.size(), 1, 1);
+  auto fit = fit_delay_integrator<double>(bump_test_data.data(), bump_test_data.size(), 2, 8);
   const auto measured_params = translate_parameters<double>(fit, update_rate);
   EXPECT_GT(static_cast<double>(measured_params.first), double{0});  //  positive response coefficient
   EXPECT_NEAR(static_cast<double>(measured_params.first), delay, static_cast<double>(delay/100));

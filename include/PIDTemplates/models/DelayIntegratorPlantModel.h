@@ -82,8 +82,8 @@ std::tuple<type_t, type_t, type_t> fit_delay_integrator(type_t* data, size_t dat
   const type_t temp_start = averaged_start_temp + temp_rise;
   size_t start_position = 0;
 
-  assert(temp_rise > 0 || data[0] < data[data_length-1]);
-  assert(temp_rise < 0 || data[0] > data[data_length-1]);
+  assert(temp_rise > 0 || data[0] > data[data_length-1]);  //  either positive change or decreasing signal
+  assert(temp_rise < 0 || data[0] < data[data_length-1]);  //  either negative change or increaing signal
 
   for(; start_position<data_length; start_position++) {
 	  if (data[0] < data[data_length-1]) {  //  increasing

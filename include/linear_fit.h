@@ -24,16 +24,16 @@ inline int fit_linear (const type_t *x,
    * i/(i+1) + (i+1 - i/i+1)/(i+2)
    * */
   for (size_t i = 0; i < n; i++) {
-      m_x += (x[i] - m_x) / (i + float_type{1.0});
-      m_y += (y[i] - m_y) / (i + float_type{1.0});
+      m_x += (x[i] - m_x) / (static_cast<float_type>(i) + float_type{1.0});
+      m_y += (y[i] - m_y) / (static_cast<float_type>(i) + float_type{1.0});
   }
 
   for (size_t i = 0; i < n; i++) {
       const float_type dx = x[i] - m_x;
       const float_type dy = y[i] - m_y;
 
-      m_dx2 += (dx * dx - m_dx2) / (i + float_type{1.0});
-      m_dxdy += (dx * dy - m_dxdy) / (i + float_type{1.0});
+      m_dx2 += (dx * dx - m_dx2) / (static_cast<float_type>(i) + float_type{1.0});
+      m_dxdy += (dx * dy - m_dxdy) / (static_cast<float_type>(i) + float_type{1.0});
     }
 
   /* In terms of y = a + b x */

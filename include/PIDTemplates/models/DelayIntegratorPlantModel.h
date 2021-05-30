@@ -106,7 +106,7 @@ std::tuple<type_t, type_t, type_t> fit_delay_integrator(type_t* data, size_t dat
   type_t* y_data = &data[std::get<0>(limits)];
   assert(x_data != nullptr);
   for (size_t i=0; i<span; i++) {
-    x_data[i] = static_cast<double>(std::get<0>(limits)+i);
+    x_data[i] = i;//static_cast<double>(std::get<0>(limits)+i);
   }
 
   fit_linear<type_t, double> (x_data,
@@ -118,6 +118,7 @@ std::tuple<type_t, type_t, type_t> fit_delay_integrator(type_t* data, size_t dat
 
   delete[] x_data;
   //  we have the line with intercept, now extend get the x intercept to give the delay
+  intercept -= static_cast<type_t>(std::get<0>(limits))*slope;
   return {intercept, slope, residual};
 }
 
@@ -125,8 +126,9 @@ std::tuple<type_t, type_t, type_t> fit_delay_integrator(type_t* data, size_t dat
 template<typename type_t>
 std::pair<type_t, type_t> translate_parameters(const std::tuple<type_t, type_t, type_t>& fit, size_t update_rate) {
   const type_t measured_slope = std::get<1>(fit)*update_rate;  //  reading/box -> box/s
-  const type_t x_intercept = std::get<0>(fit);  //  temp at x = 0
+  const type_t x_intercept = std::get<0>(fit)/measured_slope;  //  temp at x = 0
   //  const type_t y_intercept = -x_intercept/measured_slope;  //  time at t = 0
+  const type_t delay = x_intercept;
   return {x_intercept, measured_slope};
 }
 

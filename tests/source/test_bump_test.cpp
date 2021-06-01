@@ -59,22 +59,62 @@ TEST_F(BumpTestFixture, CheckFit) {
   auto fit = fit_delay_integrator<double>(bump_test_data.data(), bump_test_data.size(), 2, 4);
 
   //  Slope and offset
-  EXPECT_NEAR(static_cast<double>(std::get<0>(fit))/std::get<1>(fit), static_cast<double>(delay*update_rate), double{1});
+  EXPECT_NEAR(static_cast<double>(std::get<0>(fit))/std::get<1>(fit), static_cast<double>(delay*update_rate), update_rate/100);
   EXPECT_NEAR(static_cast<double>(std::get<2>(fit)), 0, double{1});  // Expect a good fit
 }
 
-TEST(BumpTest, Translation) {
-  static const constexpr double delay = 1;  // s
-  static const constexpr double gain = 10;  // c/control units/s
+/*
+ * y intercept -> x = 0
+ * line ignores delay
+ * ambient + (delay)*slope
+ * */
+TEST(fit_delay_integrator, correct_y_intercept) {
+  const size_t update_rate = 1000;
+  const double delay = 3;
+  const double slope = 10;
+  const double ambient = 35;
+  std::vector<double> data{};
+  size_t i = 0;
+  while(true) {
+    double pt = ambient;
+    if (i > delay*update_rate) {
+      pt = (static_cast<double>(i)/update_rate-delay)*slope;
+    }
+    printf("%E\n", pt);
+    data.push_back(pt);
+    if (pt > ambient + 5) {
+      break;
+    }
+    i++;
+  }
+  auto fit = fit_delay_integrator<double>(data.data(), data.size(), 2, 1);
+  EXPECT_NEAR(-std::get<0>(fit)/(slope), delay, 0.001);
+  EXPECT_NEAR(std::get<1>(fit)*update_rate, slope, slope/100);
+  EXPECT_NEAR(static_cast<double>(std::get<2>(fit)), 0, 1e-4);  // Expect a good fit
+}
+
+class translate_parameters_Fixture : public testing::Test {
+ public:
+  static const constexpr double ambient = 20;
+  static const constexpr double delay = 1.2;  // s
+  static const constexpr double gain = 13;  // c/control units/s
   static const constexpr double update_rate = 2000;  // Hz
   static const constexpr double drive_current = gain*0.1; // c/amp/s -> want a slope of 10c/s
+  //const double x_intercept = ambient - (delay)*gain*drive_current;
+  const double slope = gain*drive_current * update_rate;
+  const double y_intercept = (ambient - delay*gain*drive_current);
+  std::tuple<double, double, double> fit{y_intercept, slope, 0};
+};
 
-  std::tuple<double, double, double> fit{update_rate*delay, gain/drive_current, 0};
-  const double measured_delay = std::get<0>(fit)/update_rate;  //  reading/box -> box/s
-  EXPECT_NEAR(measured_delay, delay, delay/100);
-  const double measured_gain = std::get<1>(fit)/drive_current; // temp/amp/second from temp/unit/box -> a / drive_current (*units/amps) * update_rate (boxes/s)
-  EXPECT_NEAR(measured_gain, gain, gain/100);
+TEST_F(translate_parameters_Fixture, delay) {
+  const auto params = translate_parameters<double>(fit, update_rate, drive_current, ambient);
+  EXPECT_NEAR(params.first, delay, delay/1000);
 }
+TEST_F(translate_parameters_Fixture, gain) {
+  const auto params = translate_parameters<double>(fit, update_rate, drive_current, ambient);
+  EXPECT_NEAR(params.second, gain, gain/1000);
+}
+
 
 #if 0
 TEST_F(BumpTestFixture, PlotResponse) {
@@ -102,17 +142,14 @@ TEST_F(BumpTestFixture, PlotResponse) {
 }
 #endif
 
+/*
+ * Returns the delay and gain given the fit to the line
+ * */
 TEST_F(BumpTestFixture, translate_parameters) {
-  temp_filter.set_control(drive_current);
-  for (size_t i=0; i<bump_test_data.size(); i++) {
-    bump_test_data[i] = plant.update(drive_current);
-  }
-  std::vector<double> vect(bump_test_data.begin(), bump_test_data.end());
-  auto fit = fit_delay_integrator<double>(bump_test_data.data(), bump_test_data.size(), 2, 8);
-  const auto measured_params = translate_parameters<double>(fit, update_rate);
-  EXPECT_GT(static_cast<double>(measured_params.first), double{0});  //  positive response coefficient
+  const std::pair measured_params {delay, gain*drive_current};
+  //EXPECT_GT(static_cast<double>(measured_params.first), double{0});  //  positive response coefficient
   EXPECT_NEAR(static_cast<double>(measured_params.first), delay, static_cast<double>(delay/100));
-  EXPECT_NEAR(static_cast<double>(measured_params.second), gain*drive_current, static_cast<double>(measured_params.second/100));
+  EXPECT_NEAR(static_cast<double>(measured_params.second), gain, static_cast<double>(measured_params.second/100));
 }
 
 #if 0

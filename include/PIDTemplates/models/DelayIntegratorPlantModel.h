@@ -106,7 +106,7 @@ std::tuple<type_t, type_t, type_t> fit_delay_integrator(type_t* data, size_t dat
   type_t* y_data = &data[std::get<0>(limits)];
   assert(x_data != nullptr);
   for (size_t i=0; i<span; i++) {
-    x_data[i] = i;//static_cast<double>(std::get<0>(limits)+i);
+    x_data[i] = static_cast<double>(std::get<0>(limits)+i);
   }
 
   fit_linear<type_t, double> (x_data,
@@ -118,29 +118,33 @@ std::tuple<type_t, type_t, type_t> fit_delay_integrator(type_t* data, size_t dat
 
   delete[] x_data;
   //  we have the line with intercept, now extend get the x intercept to give the delay
-  intercept -= static_cast<type_t>(std::get<0>(limits))*slope;
+  //  intercept -= static_cast<type_t>(std::get<0>(limits))*slope;
   return {intercept, slope, residual};
 }
 
 //  Factor in the update rate and return the scaled values
+//  Takes the {intercept, slope, residual} in update rate units of time
+//  and return {delay, gain}
 template<typename type_t>
-std::pair<type_t, type_t> translate_parameters(const std::tuple<type_t, type_t, type_t>& fit, size_t update_rate) {
-  const type_t measured_slope = std::get<1>(fit)*update_rate;  //  reading/box -> box/s
-  const type_t x_intercept = std::get<0>(fit)/measured_slope;  //  temp at x = 0
-  //  const type_t y_intercept = -x_intercept/measured_slope;  //  time at t = 0
-  const type_t delay = x_intercept;
-  return {x_intercept, measured_slope};
+std::pair<type_t, type_t> translate_parameters(const std::tuple<type_t, type_t, type_t>& fit, size_t update_rate, type_t drive, type_t start_temp) {
+  const type_t measured_slope = std::get<1>(fit)/update_rate;  //  reading/box -> box/s
+  const type_t gain = measured_slope/drive;
+  const type_t y_intercept = std::get<0>(fit);  //  temp at x = 0
+  //  Delay is when the line crosses the initial temperature
+  //  ambient = slope*delay + yintercept
+  //  delay = (ambient-intercept)/slope
+  const type_t delay = (start_temp - y_intercept)/measured_slope;
+  assert(delay>0);
+  return {delay, gain};
 }
 
 class DelayIntegratorPlantModel {
   const double delay_;
-  const double slope_;
+  const double gain_;
   const double update_rate_;
   double temperature_;
   double ambient_;
   const double heat_leak_;
-
-  const double time_step_ = 1./update_rate_;
   size_t time_step_count_ = 0;
   double control_ = 0;
 
@@ -157,22 +161,29 @@ class DelayIntegratorPlantModel {
   }
 
  public:
+  DelayIntegratorPlantModel(double delay, double gain,
+      double update_rate, double temp_start=0, double heat_leak=0)
+      : delay_(delay), gain_(gain), update_rate_(update_rate),
+      temperature_{temp_start}, ambient_{temp_start}, heat_leak_{heat_leak} {}
+[[deprecated]]
   double update(double control) {
-    const double time = time_step_ * time_step_count_;  //  seconds
+    return update(control, 1);
+  }
+
+  double update(const double control, const size_t nsteps) {
+    const double time_step = 1./update_rate_;
+    time_step_count_+= nsteps;
+    const double time = time_step * time_step_count_;  //  seconds
     if (time >= delay_) {
       const double temperature_forcing = LinearCalculateHeatLeak(get_temperature(), ambient_, heat_leak_);
-      temperature_ += (control_ + temperature_forcing) * time_step_ * slope_;
+      temperature_ += (control_ + temperature_forcing) * time_step * nsteps * gain_;
+      //  amps * dt * dT/dt/amps
       //  temp/s/control, use last control setting as there is a delay
       control_ = control;
     }
-    time_step_count_++;
     return get_temperature();
   }
+
   double get_temperature(void) const { return temperature_; }
   const void set_temperature(double temp) { temperature_ = temp; }
-
-  DelayIntegratorPlantModel(double delay, double slope,
-      double update_rate, double temp_start=0, double heat_leak=0)
-      : delay_(delay), slope_(slope), update_rate_(update_rate),
-      temperature_{temp_start}, ambient_{temp_start}, heat_leak_{heat_leak} {}
 };

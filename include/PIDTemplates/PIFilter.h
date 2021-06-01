@@ -1,9 +1,6 @@
 /*
  * Copyright 2020 ElectroOptical Innovations, LLC
  * PIDFilter.h
- *
- *  Created on: Sep 21, 2018
- *      Author: simon
  */
 
 #pragma once
@@ -13,17 +10,28 @@
 #include <limits>
 #include <numeric>
 #include <array>
+#include <utility>
 
 template<typename type_t>
-static constexpr std::pair<type_t, type_t> DelayIntegratorSmicTuning(type_t delay_seconds,
-		type_t gain,
-		type_t update_frequency) {
+static constexpr std::pair<type_t, type_t> DelayIntegratorSmicTuning(
+    type_t delay_seconds, type_t gain, type_t update_frequency) {
   const type_t alpha = 16;
   const type_t beta = 0.4;
   const type_t kp = beta / (2 * gain * delay_seconds);
   const type_t ti = alpha * delay_seconds;
   const type_t ki = (kp / ti) / update_frequency;
   return {kp, ki};
+}
+
+template<typename type_t>
+static constexpr std::pair<type_t, type_t> DelayIntegratorFromSmicTuning(
+    type_t kp, type_t ki, type_t update_frequency) {
+  const type_t alpha = 16;
+  const type_t beta = 0.4;
+  const type_t ti = (kp/ki)/update_frequency;
+  const type_t delay_seconds = ti/alpha;
+  const type_t gain = beta / (2*kp*delay_seconds);
+  return {delay_seconds, gain};
 }
 
 /*
@@ -66,6 +74,9 @@ class IIR_PI_Filter{
     control_ = -(error*kp_ + integral_*ki_);
     sample_++;
     return control_;
+  }
+  type_t get_integral(void) const {
+    return integral_;
   }
 
   type_t get_ki(void) const {

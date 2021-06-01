@@ -73,9 +73,8 @@ include_directories(${cnl_DIR}/include)
 
 ## PIDTemplates
 set(PIDTemplates_DIR ${LibraryDirectory}/PIDTemplates)
-include_directories(${PIDTemplates_DIR})
-#target_include_directories(${TargetName} PUBLIC ${PIDTemplates_DIR})
-include_directories(${PIDTemplates_DIR}/models)
+include_directories(${PIDTemplates_DIR}/include)
+target_include_directories(${TargetName} PUBLIC ${PIDTemplates_DIR}/include)
 #target_include_directories(${TargetName} PUBLIC ${PIDTemplates_DIR}/models)
 target_compile_options(
   ${TargetName}

@@ -17,7 +17,7 @@ inline int fit_linear (const type_t *x,
                 type_t *c0, type_t *c1,
                 type_t *cov_00, type_t *cov_01, type_t *cov_11, type_t *sumsq) {
 
-	float_type m_x = 0, m_y = 0, m_dx2 = 0, m_dxdy = 0;
+  float_type m_x = 0, m_y = 0, m_dx2 = 0, m_dxdy = 0;
 
   /*
    * m_x_i = (x_i - m_x_0_i-1)/(i+1)
@@ -39,7 +39,7 @@ inline int fit_linear (const type_t *x,
   /* In terms of y = a + b x */
 
   {
-	  float_type d2 = 0;
+    float_type d2 = 0;
     assert(m_dx2 > 0);
     const float_type b = m_dxdy / m_dx2;
     const float_type a = m_y - m_x * b;

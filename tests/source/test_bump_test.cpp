@@ -80,7 +80,7 @@ TEST(fit_delay_integrator, correct_y_intercept) {
     if (i > delay*update_rate) {
       pt = (static_cast<double>(i)/update_rate-delay)*slope;
     }
-    printf("%E\n", pt);
+    //printf("%E\n", pt);
     data.push_back(pt);
     if (pt > ambient + 5) {
       break;
@@ -93,6 +93,7 @@ TEST(fit_delay_integrator, correct_y_intercept) {
   EXPECT_NEAR(static_cast<double>(std::get<2>(fit)), 0, 1e-4);  // Expect a good fit
 }
 
+#if 0
 class translate_parameters_Fixture : public testing::Test {
  public:
   static const constexpr double ambient = 20;
@@ -114,6 +115,7 @@ TEST_F(translate_parameters_Fixture, gain) {
   const auto params = translate_parameters<double>(fit, update_rate, drive_current, ambient);
   EXPECT_NEAR(params.second, gain, gain/1000);
 }
+#endif
 
 
 #if 0

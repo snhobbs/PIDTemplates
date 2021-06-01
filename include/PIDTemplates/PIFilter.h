@@ -96,6 +96,7 @@ class IIR_PI_Filter{
   }
   void set_set(type_t set) {
     set_ = set;
+    integral_ = 0;
   }
   type_t get_control(void) const {
       return control_;

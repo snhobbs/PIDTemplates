@@ -52,7 +52,7 @@ TEST_F(BumpTestFixedPointFixture, CheckDelay) {
   }
   //  Check Delay
   for (size_t i=0; i<static_cast<size_t>(delay_*update_rate_); i++) {
-    EXPECT_EQ(bump_test_data[i], static_cast<type_t>(ambient_));
+    EXPECT_NEAR(static_cast<double>(bump_test_data[i]), ambient_, 1e-2);
   }
   EXPECT_GT(bump_test_data[static_cast<size_t>(delay_*update_rate_)+1], ambient_);
 }

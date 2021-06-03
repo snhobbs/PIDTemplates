@@ -6,7 +6,7 @@
 #pragma once
 
 template<typename type_t>
-class IIR_P_Filter{
+class IIR_P_Filter {
  private:
   const type_t kp_ = 1;
   type_t set_ = 0;
@@ -17,7 +17,7 @@ class IIR_P_Filter{
 
   type_t update(const type_t reading) {
     const type_t error = reading - set_;
-    control_ = -(error*kp_);
+    control_ -= (error*kp_);
     return control_;
   }
 

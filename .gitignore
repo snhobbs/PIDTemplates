@@ -40,3 +40,7 @@ __pycache__
 .ninja_log
 build.ninja
 /.metadata/
+*.plist
+.cproject
+.project
+out

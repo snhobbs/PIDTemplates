@@ -26,6 +26,7 @@ class IIR_P_Filter {
   }
   void set_set(const type_t set) {
     set_ = set;
+    control_ = 0;
   }
   type_t get_set(void) const {
     return set_;

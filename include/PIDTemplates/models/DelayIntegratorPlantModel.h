@@ -45,21 +45,21 @@ std::tuple<size_t, size_t> find_center_limits(type_t* data, size_t data_length, 
   assert(plow_value > std::min(start_value, end_value));
 
   for (size_t i=0; i<data_length; i++) {
-	if (end_value < start_value) {  //  decreasing
-	  if (data[i] <= phigh_value && (start_position == 0)) {  //  take first lower than threshold if decreasing
-		start_position = i;
-	  } else if (data[i] <= plow_value && (end_position == data_length)) {
-		end_position = i;
-		break;
-	  }
-	} else {  // increasing
-	  if (data[i] >= plow_value && (start_position == 0)) {  //  take first above threshold if increasing
-		start_position = i;
-	  } else if (data[i] >= phigh_value && (end_position == data_length)) {
-		end_position = i;
-		break;
-	  }
-	}
+  if (end_value < start_value) {  //  decreasing
+    if (data[i] <= phigh_value && (start_position == 0)) {  //  take first lower than threshold if decreasing
+    start_position = i;
+    } else if (data[i] <= plow_value && (end_position == data_length)) {
+    end_position = i;
+    break;
+    }
+  } else {  // increasing
+    if (data[i] >= plow_value && (start_position == 0)) {  //  take first above threshold if increasing
+    start_position = i;
+    } else if (data[i] >= phigh_value && (end_position == data_length)) {
+    end_position = i;
+    break;
+    }
+  }
   }
   assert(end_position > start_position);
   return {static_cast<size_t>(std::round(start_position)), static_cast<size_t>(std::round(end_position))};
@@ -99,21 +99,15 @@ std::tuple<type_t, type_t, type_t> fit_delay_integrator(const type_t* data, size
   type_t cov_11 = 0;
   const size_t span = std::get<1>(limits) - std::get<0>(limits) + 1;
   assert(span > 12);
-  type_t* x_data = new type_t[span];
   const type_t* y_data = &data[std::get<0>(limits)];
   assert(x_data != nullptr);
-  for (size_t i=0; i<span; i++) {
-    x_data[i] = static_cast<double>(std::get<0>(limits)+i);
-  }
-
-  fit_linear<type_t, double> (x_data,
+  fit_linear_evenly_spaced<type_t, double> (std::get<0>(limits),
                 y_data,
                 span,
                 &intercept, &slope,
                 &cov_00, &cov_01, &cov_11, &residual);
 
 
-  delete[] x_data;
   //  we have the line with intercept, now extend get the x intercept to give the delay
   //  intercept -= static_cast<type_t>(std::get<0>(limits))*slope;
   return {intercept, slope, residual};

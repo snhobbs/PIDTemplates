@@ -100,7 +100,6 @@ std::tuple<type_t, type_t, type_t> fit_delay_integrator(const type_t* data, size
   const size_t span = std::get<1>(limits) - std::get<0>(limits) + 1;
   assert(span > 12);
   const type_t* y_data = &data[std::get<0>(limits)];
-  assert(x_data != nullptr);
   fit_linear_evenly_spaced<type_t, double> (std::get<0>(limits),
                 y_data,
                 span,

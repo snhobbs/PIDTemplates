@@ -17,7 +17,7 @@ class IIR_P_Filter {
 
   type_t update(const type_t reading) {
     const type_t error = reading - set_;
-    control_ -= (error*kp_);
+    control_ = -(error*kp_);
     return control_;
   }
 

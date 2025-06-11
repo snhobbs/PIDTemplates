@@ -4,6 +4,7 @@
 #include <vector>
 #include "PIDTemplates/models/DelayIntegratorPlantModel.h"
 #include "PIDTemplates/PIFilter.h"
+#include "PIDTemplates/models/FitDelayIntegratorPlantModel.h"
 
 TEST(fit_delay_integrator, full_line) {
   std::vector<double> data{};

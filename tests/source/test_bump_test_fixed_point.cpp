@@ -19,6 +19,7 @@
 #include "PIDTemplates/PIFilter.h"
 #include "PIDTemplates/PFilter.h"
 #include "PIDTemplates/models/DelayIntegratorPlantModel.h"
+#include "PIDTemplates/models/FitDelayIntegratorPlantModel.h"
 
 using type_t = cnl::fixed_point<signed long long, -20>;
 

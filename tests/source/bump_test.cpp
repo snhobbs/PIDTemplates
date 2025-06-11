@@ -14,9 +14,9 @@
 
 #include "PIDTemplates/PIFilter.h"
 #include "PIDTemplates/PFilter.h"
-#include "TemperatureController.h"
 #include "PIDTemplates/models/DelayIntegratorPlantModel.h"
 #if 0
+#include "TemperatureController.h"
 static const constexpr double delay = 5;  // s
 static const double gain = 2;  // c/control units/s
 static const constexpr double update_rate = 1000;  // Hz

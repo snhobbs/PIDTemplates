@@ -16,6 +16,7 @@
 #include "PIDTemplates/PIFilter.h"
 #include "PIDTemplates/PFilter.h"
 #include "PIDTemplates/models/DelayIntegratorPlantModel.h"
+#include "PIDTemplates/models/FitDelayIntegratorPlantModel.h"
 
 #if 0
 #include "matplotlibcpp.h"

@@ -7,3 +7,6 @@
 [submodule "libs/cnl"]
 	path = libs/cnl
 	url = git@github.com:johnmcfarlane/cnl.git
+[submodule "tec-pid-tuning"]
+	path = tec-pid-tuning
+	url = git@github.com:snhobbs/tec-pid-tuning.git

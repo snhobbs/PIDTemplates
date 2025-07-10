@@ -13,11 +13,11 @@
 #include <vector>
 #include <utility>
 #include "linear_fit.h"
-#include "cnl/fixed_point.h"
+#include "cnl/scaled_integer.h"
 #include "cnl/all.h"
 
 
-#if 0
+#if 1
 #include "matplotlibcpp.h"
 namespace plt = matplotlibcpp;
 #endif
@@ -67,5 +67,6 @@ TEST(linear_fit, CheckFit) {
 }
 
 TEST(linear_fit, CheckFit_32_8) {
-	check_fit<cnl::fixed_point<int32_t, -8>>();
+  using fixed_32_n8 = cnl::scaled_integer<int32_t, cnl::power<-8>>;
+	check_fit<fixed_32_n8>();
 }

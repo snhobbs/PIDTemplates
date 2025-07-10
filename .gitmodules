@@ -10,3 +10,6 @@
 [submodule "tec-pid-tuning"]
 	path = tec-pid-tuning
 	url = git@github.com:snhobbs/tec-pid-tuning.git
+[submodule "tests/extern/matplotlib-cpp"]
+	path = libs/matplotlib-cpp
+	url = https://github.com/lava/matplotlib-cpp.git

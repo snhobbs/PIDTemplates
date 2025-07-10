@@ -11,8 +11,16 @@ add_executable(${TargetName})
 # Add test sources
 set(TESTSRC ${CMAKE_CURRENT_SOURCE_DIR}/source)
 get_filename_component(TESTSRC source ABSOLUTE)
-aux_source_directory(${TESTSRC} DIR_SRCS)
-target_sources(${TargetName} PUBLIC ${DIR_SRCS})
+#aux_source_directory(${TESTSRC} DIR_SRCS)
+#target_sources(${TargetName} PUBLIC ${DIR_SRCS})
+# Sources
+target_sources(${TargetName} PUBLIC
+    ${TESTSRC}/main.cpp
+    #${TESTSRC}/test_gsl_linear_fit_evenly_spaced.cpp
+    ${TESTSRC}/test_gsl_linear_fit.cpp
+    # Add more test sources as needed
+)
+
 target_include_directories(${TargetName} PUBLIC ${ProjectDirectory}/source)
 target_include_directories(${TargetName} PUBLIC ${ProjectDirectory}/include)
 target_include_directories(${TargetName} PUBLIC ${TESTSRC} )
@@ -44,15 +52,27 @@ include_directories(SYSTEM /usr/lib)
 include_directories(SYSTEM /home/simon/local/include)
 include_directories(SYSTEM /usr/include)
 
-if(FALSE)
-# Matplotlib & python
-#find_package(matplotlib_cpp REQUIRED PATHS ${LibraryDirectory}/matplotlib-cpp)
-target_include_directories(${TargetName} PUBLIC ${LibraryDirectory}/matplotlib-cpp)
-include_directories(SYSTEM ${LibraryDirectory}/matplotlib-cpp)
-include_directories(${LibraryDirectory}/matplotlib-cpp)
-target_include_directories(${TargetName} PUBLIC /usr/include/python3.8)
-include_directories(/usr/include/python3.8)
-target_link_libraries(${TargetName} python3.8)
+if(TRUE)
+# Use Python3 from Anaconda
+set(PYTHON_DIR "/home/simon/anaconda3/envs/venv3.12")
+set(Python3_ROOT_DIR "${PYTHON_DIR}")
+
+# Find Python and NumPy
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development NumPy)
+
+# Matplotlib-cpp
+include_directories(SYSTEM "../libs/matplotlib-cpp")
+target_include_directories(${TargetName} PUBLIC
+    ${Python3_INCLUDE_DIRS}
+    ${Python3_NumPy_INCLUDE_DIRS}
+)
+
+target_link_libraries(${TargetName} ${Python3_LIBRARIES})
+
+message(STATUS "Python3_INCLUDE_DIRS: ${Python3_INCLUDE_DIRS}")
+message(STATUS "Python3_NumPy_INCLUDE_DIRS: ${Python3_NumPy_INCLUDE_DIRS}")
+message(STATUS "Python3_LIBRARIES: ${Python3_LIBRARIES}")
+
 endif()
 
 # GTEST

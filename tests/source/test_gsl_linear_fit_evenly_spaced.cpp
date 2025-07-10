@@ -61,6 +61,7 @@ TEST(linear_fit_even_spacing, CheckFit) {
 }
 
 TEST(linear_fit_even_spacing, CheckFit_32_8) {
-  check_fit<cnl::fixed_point<int32_t, -8>>();
+  using fixed_32_n8 = cnl::scaled_integer<int32_t, cnl::power<-8>>;
+	check_fit<fixed_32_n8>();
 }
 }

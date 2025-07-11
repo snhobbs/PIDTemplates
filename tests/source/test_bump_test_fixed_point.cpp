@@ -14,6 +14,7 @@
 #include <utility>
 #include <cstdint>
 #include "cnl/fixed_point.h"
+#include "cnl/scaled_integer.h"
 #include "cnl/all.h"
 #include "linear_fit.h"
 #include "PIDTemplates/PIFilter.h"
@@ -21,7 +22,7 @@
 #include "PIDTemplates/models/DelayIntegratorPlantModel.h"
 #include "PIDTemplates/models/FitDelayIntegratorPlantModel.h"
 
-using type_t = cnl::fixed_point<signed long long, -20>;
+using type_t = cnl::scaled_integer<int64_t, cnl::power<-20>>;
 
 namespace BumpTestFixedPoint {
 class BumpTestFixedPointFixture: public testing::Test {
@@ -80,11 +81,11 @@ TEST(BumpTest, Translation) {
   static const constexpr type_t update_rate = 2000;  // Hz
   static const constexpr type_t drive_current = gain*0.1; // c/amp/s -> want a slope of 10c/s
 
-  std::tuple<type_t, type_t, type_t> fit{update_rate*delay, gain/drive_current, 0};
-  const type_t measured_delay = std::get<0>(fit)/update_rate;  //  reading/box -> box/s
-  EXPECT_NEAR(static_cast<double>(measured_delay), static_cast<double>(delay), delay/100.);
-  const type_t measured_gain = std::get<1>(fit)/drive_current; // temp/amp/second from temp/unit/box -> a / drive_current (*units/amps) * update_rate (boxes/s)
-  EXPECT_NEAR(static_cast<double>(measured_gain), static_cast<double>(gain), gain/100.);
+  const FitResults<type_t> fit{update_rate*delay, gain/drive_current, type_t{0}};
+  const type_t measured_delay = fit.intercept/update_rate;  //  reading/box -> box/s
+  EXPECT_NEAR(static_cast<double>(measured_delay), static_cast<double>(delay), static_cast<double>(delay/100));
+  const type_t measured_gain = fit.slope/drive_current; // temp/amp/second from temp/unit/box -> a / drive_current (*units/amps) * update_rate (boxes/s)
+  EXPECT_NEAR(static_cast<double>(measured_gain), static_cast<double>(gain), static_cast<double>(gain/100));
 }
 
 #if 0
@@ -120,12 +121,21 @@ TEST(find_center_limits, DelayedLine) {
   }
   const type_t expected_max = delay + ((end-delay)*3)/4;
   const type_t expected_min = delay + ((end-delay)*1)/4;
-  const auto limits = find_center_limits<type_t, 25, 75>(data.data(), data.size(), 1, 1);
-  EXPECT_EQ(static_cast<type_t>(std::get<0>(limits)), expected_min);
-  EXPECT_EQ(static_cast<type_t>(std::get<1>(limits)), expected_max);
+
+  std::tuple<size_t, size_t> limits{};
+  const int resp = find_center_limits<type_t, 25, 75>(data.data(), data.size(), &limits, 1, 1);
+  EXPECT_EQ(
+		  static_cast<type_t>(std::get<0>(limits)),
+		  type_t(expected_min));
+  EXPECT_EQ(static_cast<type_t>(std::get<1>(limits)),
+		  type_t(expected_max));
 }
 
 TEST(find_center_limits, DelayedLineDecreasing) {
+  /*
+   * Have a delay with a decreasing slope.
+   * find_center_limits<type_t, 25, 75> should then return a 7
+   * */
   std::array<type_t, 1000> data{};
   const size_t delay = 100;
   const size_t end = data.size()-delay;
@@ -141,7 +151,10 @@ TEST(find_center_limits, DelayedLineDecreasing) {
   }
   const type_t expected_max = delay + ((end-delay)*3)/4;
   const type_t expected_min = delay + ((end-delay)*1)/4;
-  const auto limits = find_center_limits<type_t, 25, 75>(data.data(), data.size(), 1, 1);
+  assert(expected_max > expected_min);
+  std::tuple<size_t, size_t> limits{};
+  const int resp = find_center_limits<type_t, 25, 75>(data.data(), data.size(), &limits, 2, 2);
+
   EXPECT_EQ(static_cast<type_t>(std::get<0>(limits)), expected_min);
   EXPECT_EQ(static_cast<type_t>(std::get<1>(limits)), expected_max);
 }

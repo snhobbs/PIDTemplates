@@ -18,7 +18,8 @@
 #include "PIDTemplates/models/DelayIntegratorPlantModel.h"
 #include "PIDTemplates/models/FitDelayIntegratorPlantModel.h"
 
-#if 0
+//#define PLOT
+#ifdef PLOT
 #include "matplotlibcpp.h"
 namespace plt = matplotlibcpp;
 #endif
@@ -52,16 +53,22 @@ TEST_F(BumpTestFixture, CheckDelay) {
   EXPECT_GT(bump_test_data[static_cast<size_t>(delay*update_rate)+1], ambient);
 }
 
+
 TEST_F(BumpTestFixture, CheckFit) {
   temp_filter.set_control(drive_current);
   for (size_t i=0; i<bump_test_data.size(); i++) {
     bump_test_data[i] = plant.update(drive_current);
   }
-  auto fit = fit_delay_integrator<double>(bump_test_data.data(), bump_test_data.size(), 2, 4);
+  const auto fit = fit_delay_integrator<double>(
+		  bump_test_data.data(), bump_test_data.size(), 1, 1);
 
   //  Slope and offset
-  EXPECT_NEAR(static_cast<double>(std::get<0>(fit))/std::get<1>(fit), static_cast<double>(delay*update_rate), update_rate/100);
-  EXPECT_NEAR(static_cast<double>(std::get<2>(fit)), 0, double{1});  // Expect a good fit
+
+  EXPECT_NEAR(
+		  static_cast<double>(fit.slope*update_rate),
+		  static_cast<double>(gain), update_rate/100);
+  EXPECT_NEAR(static_cast<double>(fit.residual),
+		  0, double{1});  // Expect a good fit
 }
 
 /*
@@ -88,10 +95,10 @@ TEST(fit_delay_integrator, correct_y_intercept) {
     }
     i++;
   }
-  auto fit = fit_delay_integrator<double>(data.data(), data.size(), 2, 1);
-  EXPECT_NEAR(-std::get<0>(fit)/(slope), delay, 0.001);
-  EXPECT_NEAR(std::get<1>(fit)*update_rate, slope, slope/100);
-  EXPECT_NEAR(static_cast<double>(std::get<2>(fit)), 0, 1e-4);  // Expect a good fit
+  auto fit = fit_delay_integrator<double>(data.data(), data.size(), 1, 1);
+  EXPECT_NEAR(-fit.intercept, delay*update_rate, 0.001);
+  EXPECT_NEAR(fit.slope*update_rate, slope, slope/100);
+  EXPECT_NEAR(static_cast<double>(fit.residual), 0, 1e-4);  // Expect a good fit
 }
 
 #if 0
@@ -119,7 +126,7 @@ TEST_F(translate_parameters_Fixture, gain) {
 #endif
 
 
-#if 0
+#if PLOT
 TEST_F(BumpTestFixture, PlotResponse) {
   temp_filter.set_control(drive_current);
   for (size_t i=0; i<bump_test_data.size(); i++) {
@@ -127,15 +134,15 @@ TEST_F(BumpTestFixture, PlotResponse) {
   }
   std::vector<double> vect(bump_test_data.begin(), bump_test_data.end());
   auto fit = fit_delay_integrator<double>(bump_test_data.data(), bump_test_data.size(), 2, 1);
-  const double measured_slope = std::get<1>(fit)*update_rate;  //  reading/box -> box/s
+  const double measured_slope = fit.slope*update_rate;  //  reading/box -> box/s
   const double g = measured_slope/drive_current; // temp/amp/second from temp/unit/box -> a / drive_current (*units/amps) * update_rate (boxes/s)
-  const double x_intercept = std::get<0>(fit);  //  temp at x = 0
+  const double x_intercept = fit.intercept;  //  temp at x = 0
   const auto expected_x_intercept = -delay*(gain*drive_current);
   const double y_intercept = -x_intercept/measured_slope;  //  time at t = 0
-  const double delay_samples = x_intercept/std::get<1>(fit);
+  const double delay_samples = x_intercept/fit.slope;
   std::vector<double> gain_fit;
   for (size_t i=0; i<vect.size(); i++) {
-	  gain_fit.push_back(static_cast<double>(i)*std::get<1>(fit) + std::get<0>(fit));
+	  gain_fit.push_back(static_cast<double>(i)*fit.slope + fit.intercept);
   }
   plt::plot(vect);
   plt::plot(gain_fit);
@@ -155,14 +162,6 @@ TEST_F(BumpTestFixture, translate_parameters) {
   EXPECT_NEAR(static_cast<double>(measured_params.second), gain, static_cast<double>(measured_params.second/100));
 }
 
-#if 0
-TEST(find_center_limits, FlatLine) {
-  std::array<double, 1000> data{};
-  const auto limits = find_center_limits<double, 4>(data.data(), data.size(), 1, 1);
-  EXPECT_EQ(std::get<0>(limits), std::get<1>(limits));
-  EXPECT_EQ(std::get<0>(limits), 0);
-}
-#endif
 
 TEST(find_center_limits, DelayedLine) {
   std::array<double, 1000> data{};
@@ -180,7 +179,8 @@ TEST(find_center_limits, DelayedLine) {
   }
   const double expected_max = delay + ((end-delay)*3)/4;
   const double expected_min = delay + ((end-delay)*1)/4;
-  const auto limits = find_center_limits<double, 25, 75>(data.data(), data.size(), 1, 1);
+  std::tuple<size_t, size_t> limits{};
+  const int resp = find_center_limits<double, 25, 75>(data.data(), data.size(), &limits, 1, 1);
   EXPECT_EQ(static_cast<double>(std::get<0>(limits)), expected_min);
   EXPECT_EQ(static_cast<double>(std::get<1>(limits)), expected_max);
 }
@@ -201,7 +201,9 @@ TEST(find_center_limits, DelayedLineDecreasing) {
   }
   const double expected_max = delay + ((end-delay)*3)/4;
   const double expected_min = delay + ((end-delay)*1)/4;
-  const auto limits = find_center_limits<double, 25, 75>(data.data(), data.size(), 1, 1);
+  std::tuple<size_t, size_t> limits{};
+  const int resp = find_center_limits<double, 25, 75>(data.data(), data.size(), &limits, 1, 1);
+
   EXPECT_EQ(static_cast<double>(std::get<0>(limits)), expected_min);
   EXPECT_EQ(static_cast<double>(std::get<1>(limits)), expected_max);
 }

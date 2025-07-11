@@ -4,44 +4,47 @@
 #include <algorithm>
 #include <numeric>
 #include <cassert>
-#include <cmath>
-#include <deque>
 #include <cnl/fixed_point.h>
-
-
 #include "linear_fit.h"
 
-template<typename type_t>
-type_t accumulate(const type_t* start, const type_t* end, type_t value) {
-  for (const type_t* p=start; p!=end; p++) {
-    value += *p;
-  }
-  return value;
-}
 
-template<typename type_t, size_t percent, size_t percent_stop>
-std::tuple<size_t, size_t> find_center_limits(type_t* data, size_t data_length, size_t start_average=8, size_t end_average=8) {
+template<typename type_t, size_t percent_low, size_t percent_high>
+int find_center_limits(type_t* data, size_t data_length, std::tuple<size_t, size_t>* edges, size_t start_average=8, size_t end_average=8) {
+  /*
+   * Find the index of the threshold crossings
+   * */
   const constexpr size_t percent_max = 100;
-  static_assert(percent <= percent_max, "");
-  static_assert(percent_stop <= percent_max, "");
-  static_assert(percent_stop > percent, "");
+  static_assert(percent_low <= percent_max, "");
+  static_assert(percent_high <= percent_max, "");
+  static_assert(percent_high > percent_low, "Both the rising and falling edges are handled so the high percent should always be higher than the low.");
 
-  const type_t divisor_start = type_t{0} >= start_average? 1 : start_average;
-  const type_t divisor_end = type_t{0} >= end_average? 1 : end_average;
+  const auto divisor_start = static_cast<type_t>(std::max<size_t>(1, start_average));
+  const auto divisor_end = static_cast<type_t>(std::max<size_t>(1, end_average));
 
-  const type_t start_value = accumulate<type_t>(&data[0], &data[start_average], type_t{0})/divisor_start;
-  const type_t end_value = accumulate<type_t>(&data[data_length-end_average], &data[data_length], 0)/divisor_end;
+  const type_t start_value = std::accumulate(
+		  &data[0],
+		  &data[start_average], type_t{0})/divisor_start;
+
+  const type_t end_value = std::accumulate(
+		  &data[data_length-end_average],
+		  &data[data_length], type_t{0})/divisor_end;
 
   size_t start_position = 0;
   size_t end_position = data_length;
 
   const type_t difference = end_value < start_value ? start_value - end_value : end_value - start_value;
-  const type_t plow_value = std::min(start_value, end_value) + (difference*(percent))/100;
-  const type_t phigh_value = std::min(start_value, end_value) + (difference*(percent_stop))/100;
+
+  if (difference <= type_t{0}) {
+	  return 1;  //  Needs the end points to be the transition limits
+  }
+
+  const type_t baseline = std::min(start_value, end_value);
+  const type_t plow_value  = baseline + (difference*(percent_low))/100;
+  const type_t phigh_value = baseline + (difference*(percent_high))/100;
 
   assert(phigh_value <= std::max(start_value, end_value));
-  assert(phigh_value > plow_value);
   assert(plow_value > std::min(start_value, end_value));
+  assert(phigh_value > plow_value);  //  fails if the difference is 0 or there's been a saturating overflow
 
   for (size_t i=0; i<data_length; i++) {
   if (end_value < start_value) {  //  decreasing
@@ -61,25 +64,34 @@ std::tuple<size_t, size_t> find_center_limits(type_t* data, size_t data_length, 
   }
   }
   assert(end_position > start_position);
-  return {static_cast<size_t>(std::round(start_position)), static_cast<size_t>(std::round(end_position))};
+  std::get<0>(*edges) = start_position;
+  std::get<1>(*edges) = end_position;
+  return 0;
 }
+
+template<typename type_t>
+struct FitResults {
+	type_t intercept;
+	type_t slope;
+	type_t residual;
+};
 
 /*
  * Fits the line from 5% to the end of the input data. This data needs to be truncated such
- * that the end of the intergration line is still in the linear region.
+ * that the end of the integration line is still in the linear region.
  * */
-template<typename type_t>
-std::tuple<type_t, type_t, type_t> fit_delay_integrator(const type_t* data, size_t data_length, const type_t temp_rise=2, size_t start_average=8) {
+template<typename type_t, typename float_type = float>
+const FitResults<type_t> fit_delay_integrator(const type_t* data, size_t data_length, const type_t temp_rise=2, size_t start_average=8) {
   if (data_length <= (start_average)) {
     assert(0);
     return {0,0,0};
   }
 
   const type_t divisor_start = type_t{0} >= start_average? 1 : start_average;
-  const type_t averaged_start_temp = accumulate<type_t>(&data[0], &data[start_average], type_t{0})/divisor_start;
+  const type_t averaged_start_temp = std::accumulate(&data[0], &data[start_average], type_t{0})/divisor_start;
   const type_t temp_start = averaged_start_temp + temp_rise;
-  assert(temp_rise >= 0 || data[0] > data[data_length-1]);  //  either positive change or decreasing signal
-  assert(temp_rise <= 0 || data[0] < data[data_length-1]);  //  either negative change or increaing signal
+  //  assert(temp_rise >= 0 || data[0] > data[data_length-1]);  //  either positive change or decreasing signal
+  //  assert(temp_rise <= 0 || data[0] < data[data_length-1]);  //  either negative change or increaing signal
   size_t start_position = 0;
   for(; start_position<data_length; start_position++) {
     if (data[0] < data[data_length-1]) {  //  increasing
@@ -99,7 +111,7 @@ std::tuple<type_t, type_t, type_t> fit_delay_integrator(const type_t* data, size
   const size_t span = std::get<1>(limits) - std::get<0>(limits) + 1;
   assert(span > 12);
   const type_t* y_data = &data[std::get<0>(limits)];
-  fit_linear_evenly_spaced<type_t, double> (std::get<0>(limits),
+  fit_linear_evenly_spaced<type_t, float_type> (std::get<0>(limits),
                 y_data,
                 span,
                 &intercept, &slope,

@@ -16,8 +16,9 @@ get_filename_component(TESTSRC source ABSOLUTE)
 # Sources
 target_sources(${TargetName} PUBLIC
     ${TESTSRC}/main.cpp
-    #${TESTSRC}/test_gsl_linear_fit_evenly_spaced.cpp
+    ${TESTSRC}/test_gsl_linear_fit_evenly_spaced.cpp
     ${TESTSRC}/test_gsl_linear_fit.cpp
+    ${TESTSRC}/test_IIR_PIFilter.cpp
     # Add more test sources as needed
 )
 
@@ -51,29 +52,6 @@ include_directories("/usr/src")
 include_directories(SYSTEM /usr/lib)
 include_directories(SYSTEM /home/simon/local/include)
 include_directories(SYSTEM /usr/include)
-
-if(TRUE)
-# Use Python3 from Anaconda
-set(PYTHON_DIR "/home/simon/anaconda3/envs/venv3.12")
-set(Python3_ROOT_DIR "${PYTHON_DIR}")
-
-# Find Python and NumPy
-find_package(Python3 REQUIRED COMPONENTS Interpreter Development NumPy)
-
-# Matplotlib-cpp
-include_directories(SYSTEM "../libs/matplotlib-cpp")
-target_include_directories(${TargetName} PUBLIC
-    ${Python3_INCLUDE_DIRS}
-    ${Python3_NumPy_INCLUDE_DIRS}
-)
-
-target_link_libraries(${TargetName} ${Python3_LIBRARIES})
-
-message(STATUS "Python3_INCLUDE_DIRS: ${Python3_INCLUDE_DIRS}")
-message(STATUS "Python3_NumPy_INCLUDE_DIRS: ${Python3_NumPy_INCLUDE_DIRS}")
-message(STATUS "Python3_LIBRARIES: ${Python3_LIBRARIES}")
-
-endif()
 
 # GTEST
 #find_library(googletest REQUIRED PATHS "/usr/src")

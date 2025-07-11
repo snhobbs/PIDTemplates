@@ -12,8 +12,8 @@ TEST(fit_delay_integrator, full_line) {
     data.push_back(-42 + i*.1);
   }
   const auto fit = fit_delay_integrator<double>(data.data(), data.size(), 10, 1);
-  EXPECT_NEAR(std::get<0>(fit), -42, 1e-4);
-  EXPECT_NEAR(std::get<1>(fit), .1, 1e-4);
+  EXPECT_NEAR(fit.intercept, -42, 1e-4);
+  EXPECT_NEAR(fit.slope, .1, 1e-4);
 }
 
 TEST(fit_delay_integrator, offset) {
@@ -28,6 +28,6 @@ TEST(fit_delay_integrator, offset) {
     data.push_back(yintercept + i*slope);
   }
   const auto fit = fit_delay_integrator<double>(data.data(), data.size(), 10, 1);
-  EXPECT_NEAR(std::get<0>(fit), yintercept, 1e-4);
-  EXPECT_NEAR(std::get<1>(fit), slope, 1e-4);
+  EXPECT_NEAR(fit.intercept, yintercept, 1e-4);
+  EXPECT_NEAR(fit.slope, slope, 1e-4);
 }

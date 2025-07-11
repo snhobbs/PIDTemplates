@@ -63,12 +63,12 @@ inline float_type calculate_covariance_constant_x(const size_t xstart, const typ
   float_type meany = 0;
   float_type c = 0;
 
-  for (size_t i = 0; i < n; i++) {
+  for (size_t i = 1; i < n; i++) {
     float_type dx = (xstart+i) - meanx;
     float_type dy = y[i] - meany;
 
-    meanx += dx / (i+1);
-    meany += dy / (i+1);
+    meanx += dx / (i);
+    meany += dy / (i);
     c += dx * dy;
   };
 

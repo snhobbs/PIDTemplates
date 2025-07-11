@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <iostream>
 #include <vector>
+#include <utility>
 
 #include <cnl/fixed_point.h>
 #include <cnl/scaled_integer.h>
@@ -12,13 +13,25 @@
 
 typedef cnl::scaled_integer<int32_t, cnl::power<-16>> s16_16_t;
 typedef cnl::scaled_integer<int32_t, cnl::power<-10>> s22_10_t;
+using type_t = double;
 
+TEST(PID, get_set_limits_filter) {
+  const type_t set = 100;
+  const std::pair<type_t, type_t> limits = {-1000, 1000};
+  IIR_PI_Filter_Limited<type_t> filter{1, 1, 1, limits, set};
+  const std::pair<type_t, type_t> limits2 = {-2000, 2000};
+
+  EXPECT_NE(filter.get_limits(), limits2);
+  filter.set_limits(limits2);
+  EXPECT_EQ(filter.get_limits(), limits2);
+}
 TEST(PID, Startup) {
   /*
    Check that the start of the filter is running as a proportional controller
    until the filter is primed
    */
-  IIR_PI_Filter<int32_t> filter{1, 1, 1, 100};
+  const type_t set = 100;
+  IIR_PI_Filter<type_t> filter{1, 1, 1, set};
 
   int32_t procv = 100000;
   auto err = procv - filter.get_set();
@@ -33,7 +46,9 @@ TEST(PID, Startup_fixed_point) {
    Check that the start of the filter is running as a proportional controller
    until the filter is primed
    */
-  IIR_PI_Filter<s16_16_t> filter{1, 1, 1, 100};
+  using type_t = s16_16_t;
+  const type_t set = 100;
+  IIR_PI_Filter<type_t> filter{1, 1, 1, set};
 
   s16_16_t procv = 100000;
   auto err = procv - filter.get_set();
@@ -47,8 +62,8 @@ TEST(PID, Startup_fixed_point) {
  * Input error of zero, check that the output stays at 0
  * */
 TEST(PID, ZeroError) {
-  const s16_16_t set = 100;
-  IIR_PI_Filter<s16_16_t> filter{1, 1, 1, set};
+  const type_t set = 100;
+  IIR_PI_Filter<type_t> filter{1, 1, 1, set};
 
   for (size_t i=0; i<1000; i++) {
     filter.update(set);
@@ -57,14 +72,12 @@ TEST(PID, ZeroError) {
 }
 
 TEST(PID, UpdateReturnsControl) {
-  const s22_10_t set = 100;
-  IIR_PI_Filter<s22_10_t> filter{1, 1, 1, set};
-
+  const type_t set = 100;
+  IIR_PI_Filter<type_t> filter{1, 1, 1, set};
 
   // Prime filter
   filter.update(set+1);
   filter.update(set+1);
-  s16_16_t last_control = filter.get_control();
 
   for (size_t i=0; i<1000; i++) {
     const auto control = filter.update(set+1);
@@ -76,9 +89,8 @@ TEST(PID, UpdateReturnsControl) {
  * With none zero error, integral increases so output decreases 
  * */
 TEST(PID, ControlDecreases) {
-  const s22_10_t set = 100;
-  IIR_PI_Filter<s22_10_t> filter{1, 1, 1, set};
-
+  const type_t set = 100;
+  IIR_PI_Filter<type_t> filter{1, 1, 1, set};
 
   // Prime filter
   filter.update(set+1);
@@ -97,8 +109,8 @@ TEST(PID, ControlDecreases) {
  * Input a constant line and check that the output the proper calculated value
  * */
 TEST(PID, ConstantError) {
-  const s22_10_t set = 100;
-  IIR_PI_Filter<s22_10_t> filter{1, 1, 1, set};
+  const type_t set = 100;
+  IIR_PI_Filter<type_t> filter{1, 1, 1, set};
 
   const s22_10_t error = 20;
   filter.update(set+error);
@@ -113,8 +125,8 @@ TEST(PID, ConstantError) {
  * Input a constant error and check that the output the proper calculated value
  * */
 TEST(PID, ConstantIntegral) {
-  const s22_10_t set = 100;
-  IIR_PI_Filter<s22_10_t> filter{1, 1, 1, set};
+  const type_t set = 100;
+  IIR_PI_Filter<type_t> filter{1, 1, 1, set};
 
   const size_t loops = 100;
   const s22_10_t error = 0.05;

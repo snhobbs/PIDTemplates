@@ -13,6 +13,7 @@
 
 typedef cnl::scaled_integer<int32_t, cnl::power<-16>> s16_16_t;
 typedef cnl::scaled_integer<int32_t, cnl::power<-10>> s22_10_t;
+using type_t = double;
 
 static const double delay = 1;  // s
 static const double slope = 0.1;  // c/control units
@@ -21,12 +22,15 @@ static const double ambient = 20;  // c
 static const double heat_leak = 0.1;  // 1/c diff^2 temp lost to ambient factor
 
 TEST(PIDelayIntegratorControl, MaintainsTemp) {
-  const std::pair<double, double> tuning_values = DelayIntegratorSmicTuning(delay,
-                         slope, // aka gain
-                         update_rate);
+  const auto tuning_values = calculate_smic_tuning_parameters<type_t>(
+		  delay,
+		  slope, // aka gain
+		  update_rate);
 
-  const constexpr double set = 10;
-  IIR_PI_Filter<double> filter{tuning_values.first, tuning_values.second, 1/update_rate, set};
+  const constexpr type_t set = 10;
+  IIR_PI_Filter<type_t> filter{
+	  tuning_values.first, tuning_values.second, 1/update_rate, set};
+
   DelayIntegratorPlantModel plant{delay, slope,
       update_rate, ambient, heat_leak};
 
@@ -37,12 +41,14 @@ TEST(PIDelayIntegratorControl, MaintainsTemp) {
 }
 
 TEST(PIDelayIntegratorControl, MaintainsPositiveTemp) {
-  const std::pair<double, double> tuning_values = DelayIntegratorSmicTuning(delay,
-                         slope, // aka gain
-                         update_rate);
+  const auto tuning_values = calculate_smic_tuning_parameters<type_t>(
+		  delay,
+		  slope, // aka gain
+		  update_rate);
+  const constexpr type_t set = 100;
+  IIR_PI_Filter<type_t> filter{
+	  tuning_values.first, tuning_values.second, 1/update_rate, set};
 
-  const constexpr double set = 100;
-  IIR_PI_Filter<double> filter{tuning_values.first, tuning_values.second, 1/update_rate, set};
   DelayIntegratorPlantModel plant{delay, slope,
       update_rate, ambient, heat_leak};
 

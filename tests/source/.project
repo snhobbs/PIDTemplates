@@ -24,16 +24,4 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>include</name>
-			<type>2</type>
-			<location>/home/simon/bdBlue/software/firmware/workspace/BDBlue_LC120/include</location>
-		</link>
-		<link>
-			<name>lc120src</name>
-			<type>2</type>
-			<location>/home/simon/bdBlue/software/firmware/workspace/BDBlue_LC120/source</location>
-		</link>
-	</linkedResources>
 </projectDescription>

@@ -12,8 +12,8 @@
 #include <iostream>
 #include <vector>
 
-#include "PIDTemplates/PIFilter.h"
-#include "PIDTemplates/PFilter.h"
+#include "PIDTemplates/pi_filter.hpp"
+#include "PIDTemplates/p_filter.hpp"
 #include "PIDTemplates/models/DelayIntegratorPlantModel.h"
 #if 0
 #include "TemperatureController.h"

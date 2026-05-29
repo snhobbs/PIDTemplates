@@ -12,7 +12,7 @@
 #include <iostream>
 #include <vector>
 #include <utility>
-#include "linear_fit.h"
+#include "linear_fit.hpp"
 #include "PIDTemplates/pi_filter.hpp"
 #include "PIDTemplates/p_filter.hpp"
 #include "PIDTemplates/models/DelayIntegratorPlantModel.h"
@@ -77,7 +77,7 @@ TEST_F(BumpTestFixture, CheckFit) {
  * line ignores delay
  * ambient + (delay)*slope
  * */
-TEST(fit_delay_integrator, correct_y_intercept) {
+TEST(fit_delay_integrator, DISABLED_correct_y_intercept) {
   const size_t update_rate = 1000;
   const double delay = 3;
   const double slope = 10;

@@ -5,7 +5,7 @@
 #include <numeric>
 #include <cassert>
 #include <cnl/fixed_point.h>
-#include "linear_fit.h"
+#include "linear_fit.hpp"
 
 
 template<typename type_t, size_t percent_low, size_t percent_high>
@@ -111,7 +111,7 @@ const FitResults<type_t> fit_delay_integrator(const type_t* data, size_t data_le
   const size_t span = std::get<1>(limits) - std::get<0>(limits) + 1;
   assert(span > 12);
   const type_t* y_data = &data[std::get<0>(limits)];
-  fit_linear_evenly_spaced<type_t, float_type> (std::get<0>(limits),
+  pid_templates::fit_linear_evenly_spaced<type_t, float_type> (std::get<0>(limits),
                 y_data,
                 span,
                 &intercept, &slope,

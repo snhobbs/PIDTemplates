@@ -16,7 +16,7 @@
 #include "cnl/fixed_point.h"
 #include "cnl/scaled_integer.h"
 #include "cnl/all.h"
-#include "linear_fit.h"
+#include "linear_fit.hpp"
 #include "PIDTemplates/pi_filter.hpp"
 #include "PIDTemplates/p_filter.hpp"
 #include "PIDTemplates/models/DelayIntegratorPlantModel.h"

@@ -118,10 +118,16 @@ class IIR_PI_Filter {
   type_t get_integral(void) const { return integral_; }
 
   type_t get_ki(void) const { return ki_; }
-  void set_ki(type_t ki) { ki_ = ki; }
+  void set_ki(type_t ki) {
+		ki_ = ki;
+		reset();
+  }
 
   type_t get_kp(void) const { return kp_; }
-  void set_kp(type_t kp) { kp_ = kp; }
+  void set_kp(type_t kp) {
+	  kp_ = kp;
+      reset();
+  }
 
   type_t get_set(void) const { return set_; }
   void set_set(type_t set) {
@@ -152,9 +158,9 @@ public:
 
 	 public:
 	  IIR_PI_Filter_Limited(type_t kp, type_t ki, type_t sample_time,
-		  std::pair<type_t, type_t> limits,
-	      type_t set=0)
+		  std::pair<type_t, type_t> limits, type_t set=0)
 	      : IIR_PI_Filter<type_t>{kp, ki, sample_time, set}, limits_{limits} {}
+
 	  std::pair<type_t, type_t> get_limits() const {
 		  return limits_;
 	  }

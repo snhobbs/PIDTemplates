@@ -16,9 +16,9 @@
 #include "cnl/fixed_point.h"
 #include "cnl/scaled_integer.h"
 #include "cnl/all.h"
-#include "linear_fit.h"
-#include "PIDTemplates/PIFilter.h"
-#include "PIDTemplates/PFilter.h"
+#include "linear_fit.hpp"
+#include "PIDTemplates/pi_filter.hpp"
+#include "PIDTemplates/p_filter.hpp"
 #include "PIDTemplates/models/DelayIntegratorPlantModel.h"
 #include "PIDTemplates/models/FitDelayIntegratorPlantModel.h"
 
@@ -34,13 +34,11 @@ public:
   static const constexpr double heat_leak_ = 0;//0.05;//0.1;  // 1/c diff^2 temp lost to ambient factor
   static const constexpr double drive_current_ = gain_*0.1; // c/amp/s -> want a slope of 10c/s
   static const constexpr auto tuning_values_ =
-                            DelayIntegratorSmicTuning(
-                            		(delay_),
-									(gain_),
-									(update_rate_));
+      pid_templates::calculate_smic_tuning(delay_, gain_, update_rate_);
 
   DelayIntegratorPlantModel plant{delay_, gain_, update_rate_, ambient_, heat_leak_};
-  IIR_PI_Filter<type_t> temp_filter {tuning_values_.first, tuning_values_.second, 1/update_rate_, ambient_};
+  pid_templates::PiFilter<type_t> temp_filter{
+      tuning_values_.first, tuning_values_.second, 1.0 / update_rate_, ambient_};
   std::array<type_t, static_cast<size_t>(2*delay_*update_rate_)> bump_test_data{};
 
 };

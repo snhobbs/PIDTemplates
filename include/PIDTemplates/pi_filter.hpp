@@ -145,6 +145,27 @@ class PiFilter {
   // Sets both gains atomically with a single reset.
   void set_coeffs(T kp, T ki) noexcept { kp_ = kp; ki_ = ki; reset(); }
   void set_setpoint(T s)      noexcept { setpoint_ = s; reset(); }
+
+  // Live changes that keep the integral, so the output doesn't drop to the
+  // P term alone.
+  void retarget(T s) noexcept { setpoint_ = s; }
+  // Keeps integral * ki constant when ki changes.
+  void retune(T kp, T ki) noexcept {
+    if (ki_ != T{} && ki != T{}) { integral_ = integral_ * ki_ / ki; }
+    kp_ = kp;
+    ki_ = ki;
+  }
+  // Bumpless start: make the next update at this error return `control`.
+  // Needs ki != 0; otherwise only the history is primed.
+  void preset(T control, T error) noexcept {
+    errors_[0] = error;
+    errors_[1] = error;
+    if (ki_ != T{}) { integral_ = -(control + error * kp_) / ki_; }
+    control_ = control;
+    sample_ = kErrorHistory;
+  }
+  // Time base of the integral, in the same unit it was constructed with.
+  void set_sample_time(T h)   noexcept { sample_time_ = h; }
   void set_control(T control) noexcept { control_ = control; }
 
  private:
@@ -155,7 +176,7 @@ class PiFilter {
 
   T kp_;
   T ki_;
-  const T sample_time_;
+  T sample_time_;
   T setpoint_;
   std::array<T, kErrorHistory> errors_{};
   T integral_{};
